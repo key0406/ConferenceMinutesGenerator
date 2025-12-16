@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>議事録サポートツール</title>
+  <style>
+    body {
+      font-family: "Helvetica Neue", sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical;
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .button-group {
+      margin: 1rem 0;
+    }
+
+    .button-group button {
+      padding: 0.5rem 1rem;
+      margin-right: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      font-size: 1rem;
+    }
+
+    .button-group button:hover {
+      background-color: #0056b3;
+    }
+
+    input[type="submit"] {
+      padding: 0.7rem 2rem;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #218838;
+    }
+
+    pre {
+      background-color: #fff;
+      padding: 1rem;
+      border-left: 5px solid #007bff;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border-radius: 5px;
+    }
+
+    h2 {
+      margin-top: 2rem;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 0.3rem;
+    }
+
+    /*ロード中のアニメーション*/
+    #loading {
+      display: none;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    function setPromptType(type) {
+      document.getElementById('prompt_type').value = type;
+    }
+  </script>
+</head>
+
+<body>
+  <h1>AI議事録サポートツール</h1>
+
+  <form method="POST" enctype="multipart/form-data">
+    <label>音声ファイルを選択：</label>
+    <input type="file" name="audio" accept=".mp3,.m4a,.wav" required>
+
+    <div class="button-group">
+      <label for="select-lang">翻訳したい言語を選択してください:</label>
+      <button type="button" value="option1" onclick="LanguageSelector('ja')">日本語</option>
+      <button type="button" value="option2" onclick="LanguageSelector('en')">英語</option>
+      <button type="button" value="option3" onclick="LanguageSelector('zh')">中国語</option>
+    </select>
+    </div>
+
+    <div class="button-group">
+      <label>要約スタイルを選択：</label><br>
+      <button type="button" onclick="setPromptType('勉強会')">勉強会</button>
+      <button type="button" onclick="setPromptType('委員会')">委員会</button>
+    </div>
+
+    <label>その他（自由入力）:</label>
+    <textarea id="other" rows="3" cols="50" placeholder="例: 要約させたいスタイルを入力してください"></textarea>
+
+    <input type="hidden" name="lang_type" id="lang_type" value="">
+    <input type="hidden" name="prompt_type" id="prompt_type" value="">
+    <input type="submit" value="要約を開始">
+    <div id="loading">
+      <span class="spinner"></span> 要約中です。お待ちください...
+    </div>
+  </form>
+
+{% if transcription_list %}
+  <h2>チャンクごとの文字起こし</h2>
+  {% for chunk in transcription_list %}
+    <h3>チャンク {{ loop.index }}</h3>
+    <pre>{{ chunk }}</pre>
+  {% endfor %}
+{% endif %}
+
+{% if summary_list %}
+  <h2>チャンクごとの要約</h2>
+  {% for summary_chunk in summary_list %}
+    <h3>チャンク {{ loop.index }}</h3>
+    <pre>{{ summary_chunk }}</pre>
+  {% endfor %}
+{% endif %}
+
+{% if summary %}
+  <h2>議事録 要約結果</h2>
+  <pre>{{ summary }}</pre>
+{% endif %}
+
+</body>
+</html>
+<script>
+  function LanguageSelector(lang){
+    document.getElementById('lang_type').value = lang;
+  }
+  function setPromptType(type) {
+    document.getElementById('prompt_type').value = type;
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("form");
+    const loading = document.getElementById("loading");
+    const promptInput = document.getElementById("prompt_type");
+    const otherInput = document.getElementById("other");
+
+    form.addEventListener("submit", () => {
+      if (!promptInput.value && otherInput.value.trim()) {
+        promptInput.value = otherInput.value.trim();
+      }
+
+      loading.style.display = "block";
+    });
+  });
+</script>
